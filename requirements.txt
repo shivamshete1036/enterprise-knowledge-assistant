@@ -8,6 +8,7 @@ langchain
 langchain-community
 langchain-groq
 langchain-ollama
+langchain-google-vertexai
 
 # RAG
 chromadb
@@ -16,6 +17,7 @@ pypdf
 
 # RAG Evaluation
 ragas
+instructor
 
 # MCP
 mcp
@@ -26,3 +28,8 @@ streamlit
 
 # Observability
 langsmith
+
+# Guardrails
+guardrails-ai
+presidio-analyzer
+presidio-anonymizer

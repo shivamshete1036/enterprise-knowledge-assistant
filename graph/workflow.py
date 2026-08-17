@@ -5,6 +5,7 @@ from graph.nodes.input_guard import input_guard_node
 from graph.nodes.retriever_agent import retriever_agent
 from graph.nodes.response_agent import response_agent
 from graph.nodes.output_guard import output_guard_node
+from graph.nodes.evaluator_agent import evaluator_agent
 
 
 def build_graph():
@@ -36,6 +37,11 @@ def build_graph():
         response_agent,
     )
 
+    workflow.add_node(
+        "evaluator",
+        evaluator_agent,
+    )
+
     # Workflow edges
     workflow.add_edge(
         START,
@@ -59,6 +65,11 @@ def build_graph():
 
     workflow.add_edge(
         "output_guard",
+        "evaluator",
+    )
+
+    workflow.add_edge(
+        "evaluator",
         END,
     )
 
