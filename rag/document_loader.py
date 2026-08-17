@@ -25,14 +25,3 @@ def load_documents(knowledge_base_path: str) -> list[Document]:
         documents.append(document)
 
     return documents
-
-
-if __name__ == "__main__":
-    documents = load_documents("knowledge_base")
-
-    print(f"Loaded documents: {len(documents)}")
-
-    for document in documents:
-        print("\n--- Document ---")
-        print(document.page_content)
-        print("Metadata:", document.metadata)
