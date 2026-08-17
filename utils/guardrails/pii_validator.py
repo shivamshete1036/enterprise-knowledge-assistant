@@ -76,7 +76,7 @@ class PIIValidator(Validator):
 
         return FailResult(
             error_message=(
-                "Private information detected in user input: "
-                + ", ".join(detected_types)
+                 "Private information detected in content: "
+                 + ", ".join(detected_types)
             )
         )
