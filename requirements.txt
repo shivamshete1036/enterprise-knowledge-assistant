@@ -1,0 +1,27 @@
+# Core
+python-dotenv
+pydantic
+
+# LangGraph / LangChain
+langgraph
+langchain
+langchain-community
+langchain-groq
+
+# RAG
+chromadb
+sentence-transformers
+pypdf
+
+# RAG Evaluation
+ragas
+
+# MCP
+mcp
+fastmcp
+
+# UI
+streamlit
+
+# Observability
+langsmith
