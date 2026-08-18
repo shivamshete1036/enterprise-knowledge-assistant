@@ -11,5 +11,10 @@ class GraphState(TypedDict):
     question: str
     retrieved_documents: list[Document]
     answer: str
+
     evaluation_scores: dict
     evaluation_summary: str
+
+    # MCP integration
+    mcp_action: str
+    mcp_result: dict

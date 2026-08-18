@@ -1,11 +1,14 @@
 from langgraph.graph import END, START, StateGraph
 
 from graph.state import GraphState
+
 from graph.nodes.input_guard import input_guard_node
+from graph.nodes.router import request_router
 from graph.nodes.retriever_agent import retriever_agent
 from graph.nodes.response_agent import response_agent
 from graph.nodes.output_guard import output_guard_node
 from graph.nodes.evaluator_agent import evaluator_agent
+from graph.nodes.mcp_agent import mcp_agent
 
 
 def build_graph():
@@ -15,7 +18,10 @@ def build_graph():
 
     workflow = StateGraph(GraphState)
 
+    # --------------------------------------------------
     # Guardrail nodes
+    # --------------------------------------------------
+
     workflow.add_node(
         "input_guard",
         input_guard_node,
@@ -26,7 +32,10 @@ def build_graph():
         output_guard_node,
     )
 
-    # Agent nodes
+    # --------------------------------------------------
+    # RAG nodes
+    # --------------------------------------------------
+
     workflow.add_node(
         "retriever",
         retriever_agent,
@@ -42,16 +51,40 @@ def build_graph():
         evaluator_agent,
     )
 
-    # Workflow edges
+    # --------------------------------------------------
+    # MCP node
+    # --------------------------------------------------
+
+    workflow.add_node(
+        "mcp_agent",
+        mcp_agent,
+    )
+
+    # --------------------------------------------------
+    # START → Input Guard
+    # --------------------------------------------------
+
     workflow.add_edge(
         START,
         "input_guard",
     )
 
-    workflow.add_edge(
+    # --------------------------------------------------
+    # Input Guard → Router
+    # --------------------------------------------------
+
+    workflow.add_conditional_edges(
         "input_guard",
-        "retriever",
+        request_router,
+        {
+            "knowledge": "retriever",
+            "action": "mcp_agent",
+        },
     )
+
+    # --------------------------------------------------
+    # RAG pipeline
+    # --------------------------------------------------
 
     workflow.add_edge(
         "retriever",
@@ -70,6 +103,15 @@ def build_graph():
 
     workflow.add_edge(
         "evaluator",
+        END,
+    )
+
+    # --------------------------------------------------
+    # MCP pipeline
+    # --------------------------------------------------
+
+    workflow.add_edge(
+        "mcp_agent",
         END,
     )
 
