@@ -9,24 +9,27 @@ class InputGuard:
     """
     Guardrails-based input protection.
 
-    User input is validated for PII before it is sent
+    User input is inspected for PII before it is sent
     to any LLM.
+
+    Detected PII is sanitized rather than blocking
+    the entire request.
     """
 
     def __init__(self):
         validator = PIIValidator(
-            on_fail="exception",
+            on_fail="fix",
         )
 
         self.guard = Guard().use(validator)
 
     def validate(self, user_input: str) -> str:
         """
-        Validate user input.
+        Validate and sanitize user input.
 
-        Returns the original input if safe.
+        Returns the original input when no PII is found.
 
-        Raises an exception if PII is detected.
+        Returns a sanitized version when PII is detected.
         """
 
         result = self.guard.validate(user_input)

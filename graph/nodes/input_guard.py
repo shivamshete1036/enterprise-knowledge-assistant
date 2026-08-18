@@ -17,7 +17,7 @@ def input_guard_node(state: GraphState) -> GraphState:
     question = state["question"]
 
     validated_question = input_guard.validate(question)
-
+    # print(f"[Input Guard] Sanitized question: {validated_question}")
     return {
         **state,
         "question": validated_question,
