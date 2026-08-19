@@ -1,0 +1,32 @@
+IT SUPPORT POLICY
+
+Document Type: Information Technology Policy
+Version: 1.0
+Effective Date: January 1, 2026
+
+1. Purpose
+The IT Support team handles employee technology issues and service requests.
+
+2. Support Tickets
+Employees should create a support ticket when they experience an IT problem that requires assistance. The ticket should contain a clear title and description of the problem.
+
+3. Priority Levels
+Low priority: The issue has limited impact and does not significantly prevent normal work.
+
+Medium priority: The issue affects an employee's work but a temporary workaround is available.
+
+High priority: The issue significantly affects business work or prevents an employee or group of employees from performing important work.
+
+Critical priority: The issue causes a major business-wide outage, serious security incident, or widespread loss of an essential service.
+
+4. VPN Issues
+Employees who cannot connect to the corporate VPN should first verify their internet connection and restart the VPN client. If the problem continues, they should create an IT support ticket with details of the error.
+
+5. Password and Account Issues
+Employees experiencing password or account-access problems should use the approved account-recovery process. If recovery fails, they should contact IT Support through the approved support channel.
+
+6. Equipment Issues
+Problems with company laptops, monitors, keyboards, or other company-provided equipment should be reported to IT Support.
+
+7. Ticket Information
+Employees should avoid including passwords, authentication codes, credit-card numbers, or other unnecessary sensitive information in support-ticket descriptions.

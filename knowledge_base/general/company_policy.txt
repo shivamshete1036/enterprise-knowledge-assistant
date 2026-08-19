@@ -1,0 +1,20 @@
+COMPANY POLICY
+
+Document Type: Internal Company Policy
+Version: 1.0
+Effective Date: January 1, 2026
+
+1. Code of Conduct
+Employees are expected to act professionally, honestly, and respectfully when dealing with colleagues, customers, partners, and vendors. Employees must follow applicable company policies and report suspected violations through the appropriate internal channels.
+
+2. Information Security
+Employees must protect company information and use company systems only for authorized business purposes. Passwords and authentication credentials must never be shared with other employees. Sensitive company information must not be copied to unauthorized personal devices or external services.
+
+3. Remote Work
+Employees may work remotely when permitted by their role, manager, and applicable company policy. Employees working remotely must maintain a suitable work environment, protect company equipment, and follow all information-security requirements.
+
+4. Acceptable Use
+Company devices, accounts, applications, and networks are intended primarily for business activities. Employees must not use company systems for unlawful activities or activities that could compromise company security.
+
+5. Policy Compliance
+Employees are responsible for reading and following current company policies. When a policy is updated, the latest approved version takes precedence over older versions.
