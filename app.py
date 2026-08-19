@@ -1,7 +1,32 @@
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+os.environ["LANGCHAIN_TRACING_V2"] = os.getenv(
+    "LANGSMITH_TRACING",
+    "false",
+)
+
+os.environ["LANGCHAIN_API_KEY"] = os.getenv(
+    "LANGSMITH_API_KEY",
+    "",
+)
+
+os.environ["LANGCHAIN_PROJECT"] = os.getenv(
+    "LANGSMITH_PROJECT",
+    "enterprise-knowledge-assistant",
+)
+
+os.environ["LANGCHAIN_ENDPOINT"] = os.getenv(
+    "LANGSMITH_ENDPOINT",
+    "https://api.smith.langchain.com",
+)
+
+
 import streamlit as st
 
 from graph.workflow import build_graph
-
 
 # --------------------------------------------------
 # Page configuration
