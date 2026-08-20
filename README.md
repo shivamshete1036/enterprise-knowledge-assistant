@@ -1,730 +1,432 @@
 # Enterprise Knowledge Assistant
 
-An AI-powered Enterprise Knowledge Assistant built with **LangGraph, RAG, RAGAS, Guardrails, and MCP**.
+An AI-powered Enterprise Knowledge Assistant built using **LangGraph**, **RAG**, **MCP**, **Guardrails**, **RAGAS**, **LangSmith**, and **Streamlit**.
 
-The system can answer questions from an enterprise knowledge base, protect sensitive information, evaluate generated answers, and interact with an external ticketing system through a custom MCP server.
+## Features
 
-## Problem Statement
+- Enterprise knowledge retrieval using RAG and ChromaDB
+- LangGraph-based workflow orchestration
+- MCP integration for IT support tickets
+- PII protection using Guardrails AI and Microsoft Presidio
+- RAGAS evaluation using Faithfulness and Answer Relevancy
+- LangSmith observability and tracing
+- Streamlit user interface
+- Reproducible dependency management with `uv`
 
-Organizations store information across multiple systems such as knowledge repositories, policy documents, ticketing systems, CRM applications, and project management tools.
-
-Employees often spend significant time searching for accurate and up-to-date information from these disconnected sources.
-
-This project demonstrates an AI-powered enterprise assistant that:
-
-- Retrieves relevant information from an enterprise knowledge base.
-- Generates grounded responses using retrieved context.
-- Protects sensitive information using guardrails.
-- Evaluates RAG responses using RAGAS.
-- Routes action-oriented requests to an MCP-based external system.
-- Creates enterprise support tickets through MCP.
-
-## Key Features
-
-### Knowledge Assistant
-
-- Semantic search over enterprise documents.
-- ChromaDB vector database.
-- Sentence Transformers embeddings.
-- Context-grounded answer generation.
-- Prevents unsupported information from being generated.
-
-### Intelligent Request Routing
-
-The LangGraph workflow distinguishes between knowledge requests and action requests.
-
-**Knowledge request:**
+## Architecture
 
 ```text
-What is the company's work-from-home policy?
+User → Streamlit → LangGraph → Input Guard → Router
+                                      │
+                         ┌────────────┴────────────┐
+                         ▼                         ▼
+                    Knowledge                    Action
+                         │                         │
+                    Retriever                 MCP Agent
+                         │                    ┌────┼────┐
+                      ChromaDB             Create  Get    Search
+                         │                  Ticket Ticket  Tickets
+                    Response Agent               │
+                         │                  MCP Server
+                    Output Guard
+                         │
+                    RAGAS Evaluator
+                         │
+                        END
+
+                  LangSmith Observability
 ```
-
-**Action request:**
-
-```text
-Create a high priority support ticket because employees cannot connect to VPN.
-```
-
-Knowledge requests are routed through the RAG pipeline. Action requests are routed to the MCP agent.
-
-### Guardrails
-
-The application includes:
-
-- Input PII detection.
-- Output PII protection.
-- Presidio-based validation.
-- Sensitive information blocking before it reaches the LLM.
-
-### RAGAS Evaluation
-
-The generated RAG responses are evaluated using:
-
-- Faithfulness
-- Answer Relevancy
-
-The evaluation scores are stored in the LangGraph state.
-
-### MCP Integration
-
-The application integrates with a custom MCP ticketing system.
-
-Available MCP tools:
-
-```text
-create_ticket
-get_ticket
-search_tickets
-```
-
-The current LangGraph MCP agent uses `create_ticket`.
-
-### Ticket Creation
-
-For example:
-
-```text
-Create a high priority support ticket because employees
-cannot connect to the corporate VPN.
-```
-
-The system creates:
-
-```text
-Ticket ID: TKT-0001
-Title: VPN connection issue
-Priority: high
-Status: open
-```
-
-## System Architecture
-
-```text
-                         User
-                           |
-                           v
-                    +-------------+
-                    | Input Guard |
-                    +------+------+
-                           |
-                           v
-                    +-------------+
-                    |   Router    |
-                    +------+------+
-                           |
-             +-------------+-------------+
-             |                           |
-        Knowledge                     Action
-             |                           |
-             v                           v
-       +-----------+              +-------------+
-       | Retriever |              | MCP Agent   |
-       +-----+-----+              +------+------+
-             |                           |
-             v                           v
-       +-----------+              +-------------+
-       | Response  |              | MCP Client  |
-       |   Agent   |              +------+------+
-       +-----+-----+                     |
-             |                            v
-             v                    +-------------+
-       +-------------+             | FastMCP     |
-       | Output Guard|             | Server      |
-       +------+------+
-              |                           |
-              v                           v
-       +-------------+              +-------------+
-       |    RAGAS    |              | Ticket DB   |
-       |  Evaluator  |              |   SQLite    |
-       +-------------+              +-------------+
-```
-
-## LangGraph Workflow
-
-### Knowledge Request
-
-```text
-START
-  |
-  v
-Input Guard
-  |
-  v
-Router
-  |
-  v
-Retriever
-  |
-  v
-Response Agent
-  |
-  v
-Output Guard
-  |
-  v
-RAGAS Evaluator
-  |
-  v
-END
-```
-
-### Action Request
-
-```text
-START
-  |
-  v
-Input Guard
-  |
-  v
-Router
-  |
-  v
-MCP Agent
-  |
-  v
-MCP Client
-  |
-  v
-FastMCP Server
-  |
-  v
-SQLite
-  |
-  v
-END
-```
-
-This routing prevents action requests from unnecessarily going through the RAG and RAGAS pipeline.
 
 ## RAG Pipeline
 
 ```text
-Enterprise Documents
-        |
-        v
-Document Loader
-        |
-        v
-Chunking
-        |
-        v
-Sentence Transformer
-        |
-        v
-Embeddings
-        |
-        v
-ChromaDB
-        |
-        v
-Semantic Retrieval
-        |
-        v
-LLM
-        |
-        v
-Grounded Answer
+Knowledge Base → Document Loader → Chunking
+→ Sentence Transformer → Embeddings → ChromaDB
+→ Semantic Retrieval → LLM Response
 ```
 
-### Components
+Embedding model:
 
-- **Document Loader** — loads enterprise knowledge documents.
-- **Chunker** — splits documents into smaller chunks.
-- **Embedding Model** — `sentence-transformers/all-MiniLM-L6-v2`.
-- **Vector Store** — ChromaDB.
-- **Retriever** — retrieves the most relevant documents.
-- **Response Agent** — generates an answer using only retrieved context.
+```text
+all-MiniLM-L6-v2
+```
 
-## Guardrails
+## LangGraph Orchestration
 
-The project uses Guardrails and Microsoft Presidio components to protect sensitive information.
+### Knowledge request
 
-### Input Protection
-
-Sensitive information is detected before the request reaches the RAG or MCP pipeline.
+```text
+Input Guard → Router → Retriever → Response Agent
+→ Output Guard → RAGAS Evaluator → END
+```
 
 Example:
 
 ```text
-My email is shivam@example.com.
-What is the work-from-home policy?
+How many annual leave days does a full-time employee receive?
 ```
 
-The input guard blocks the request.
+### MCP action request
 
-### Output Protection
-
-Generated responses are also checked before being returned to the user.
-
-This helps prevent accidental exposure of sensitive information.
-
-## RAGAS Evaluation
-
-RAG responses are evaluated using RAGAS.
-
-### Faithfulness
-
-Measures whether the generated answer is supported by the retrieved context.
-
-### Answer Relevancy
-
-Measures how relevant the generated answer is to the user's question.
+```text
+Input Guard → Router → MCP Agent → MCP Server → Ticket Operation → END
+```
 
 Example:
 
-```python
-{
-    "faithfulness": 1.0,
-    "answer_relevancy": 0.67
-}
-```
-
-The project uses:
-
 ```text
-RAGAS: 0.4.3
-Instructor: 1.15.4
+Create a high priority support ticket because employees cannot connect to the corporate VPN.
 ```
-
-The RAGAS evaluator uses the Ollama OpenAI-compatible API.
 
 ## MCP Integration
 
-The project contains a custom MCP server for an enterprise ticketing system.
+The MCP server currently exposes three tools:
 
-### MCP Architecture
+### `create_ticket`
 
-```text
-LangGraph MCP Agent
-        |
-        v
-    MCP Client
-        |
-        v
- MCP Protocol
-        |
-        v
-   FastMCP Server
-        |
-        v
-   Ticket System
-        |
-        v
-      SQLite
-```
-
-### MCP Server
+Creates a support ticket.
 
 ```text
-mcp_server/ticket_server.py
+Create a high priority support ticket because employees cannot connect to the corporate VPN.
 ```
 
-### MCP Client
+### `get_ticket`
+
+Retrieves an existing ticket.
 
 ```text
-mcp_client/ticket_client.py
+Give me the details of TKT-0016.
 ```
 
-### Available Tools
+### `search_tickets`
+
+Searches support tickets.
 
 ```text
-create_ticket
-get_ticket
-search_tickets
+Find all support tickets related to VPN.
 ```
 
-The LangGraph MCP agent currently uses `create_ticket`. The server already exposes `get_ticket` and `search_tickets`, which can be integrated into the agent later.
+## Guardrails and PII Protection
 
-## Example MCP Interaction
+PII protection uses:
 
-### User Request
+- Guardrails AI
+- Microsoft Presidio
+- spaCy
+
+Protected information includes:
 
 ```text
-Create a high priority support ticket because employees
-cannot connect to the corporate VPN.
+EMAIL
+PHONE
+CREDIT CARD
+IP ADDRESS
+PAN
+AADHAAR
+PASSPORT
 ```
 
-### Router
+Example:
 
 ```text
-ACTION
+Original:
+My email is shivam@example.com. What does the company say about working from home?
+
+Sanitized:
+My email is [EMAIL_REDACTED]. What does the company say about working from home?
 ```
 
-### MCP Agent
+## RAGAS Evaluation
+
+The system evaluates:
+
+- **Faithfulness** — whether the answer is supported by retrieved context.
+- **Answer Relevancy** — whether the answer is relevant to the user's question.
+
+Example:
 
 ```text
-Detected priority: high
-Ticket title: VPN connection issue
+Faithfulness: 1.0000
+Answer Relevancy: 0.9274
 ```
 
-### MCP Server
+## LangSmith Observability
 
-```text
-{
-    "success": true,
-    "ticket_id": "TKT-0001",
-    "title": "VPN connection issue",
-    "priority": "high",
-    "status": "open"
-}
-```
+LangSmith is used for application tracing and observability.
 
-### Final Response
+Example configuration:
 
-```text
-I've created a support ticket for you.
+```env
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=enterprise-knowledge-assistant
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 
-Ticket ID: TKT-0001
-Title: VPN connection issue
-Priority: High
-Status: Open
-```
+## Technology Stack
+
+| Component | Technology |
+|---|---|
+| Language | Python |
+| Environment Management | uv |
+| UI | Streamlit |
+| Orchestration | LangGraph |
+| LLM Framework | LangChain |
+| RAG | Retrieval-Augmented Generation |
+| Embeddings | Sentence Transformers |
+| Embedding Model | `all-MiniLM-L6-v2` |
+| Vector Database | ChromaDB |
+| Document Processing | PyPDF |
+| MCP | Model Context Protocol |
+| MCP Server | FastMCP |
+| Guardrails | Guardrails AI |
+| PII Detection | Microsoft Presidio |
+| NLP | spaCy |
+| Evaluation | RAGAS |
+| Observability | LangSmith |
 
 ## Project Structure
 
 ```text
 enterprise-knowledge-assistant/
-│
 ├── app.py
-├── requirements.txt
-├── README.md
-├── .env.example
-├── .gitignore
-│
 ├── config/
-│   └── __init__.py
-│
+├── data/
+│   └── chroma/
 ├── evaluation/
-│   ├── ragas_evaluator.py
-│   └── __init__.py
-│
 ├── graph/
-│   ├── state.py
 │   ├── workflow.py
+│   ├── state.py
 │   └── nodes/
-│       ├── input_guard.py
-│       ├── output_guard.py
-│       ├── router.py
-│       ├── retriever_agent.py
-│       ├── response_agent.py
-│       ├── evaluator_agent.py
-│       └── mcp_agent.py
-│
 ├── knowledge_base/
-│   └── general/
-│       └── company_overview.txt
-│
 ├── mcp_client/
 │   └── ticket_client.py
-│
 ├── mcp_server/
 │   └── ticket_server.py
-│
 ├── rag/
 │   ├── document_loader.py
 │   ├── chunker.py
 │   ├── embeddings.py
 │   ├── vector_store.py
-│   ├── retriever.py
 │   └── index_knowledge_base.py
-│
+├── tests/
 ├── utils/
-│   ├── ragas_compat.py
 │   └── guardrails/
-│       ├── input_guard.py
-│       ├── output_guard.py
-│       ├── pii_validator.py
-│       └── presidio_config.py
-│
-└── tests/
-    ├── test_chunker.py
-    ├── test_document_loader.py
-    ├── test_embeddings.py
-    ├── test_end_to_end.py
-    ├── test_full_graph.py
-    ├── test_input_guard.py
-    ├── test_mcp_graph.py
-    ├── test_output_guard.py
-    ├── test_ragas_evaluator.py
-    ├── test_response_agent.py
-    ├── test_retriever.py
-    ├── test_vector_store.py
-    └── test_workflow.py
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+├── uv.lock
+└── README.md
 ```
 
-Generated runtime data such as ChromaDB files and the SQLite ticket database are excluded from Git.
+## Requirements
 
-## Technology Stack
+The currently tested environment uses:
 
-| Category | Technology |
-|---|---|
-| Language | Python |
-| Agent Orchestration | LangGraph |
-| LLM | Ollama |
-| RAG Framework | LangChain |
-| Embeddings | Sentence Transformers |
-| Vector Database | ChromaDB |
-| Evaluation | RAGAS |
-| LLM Evaluation Adapter | Instructor |
-| Guardrails | Guardrails AI |
-| PII Detection | Microsoft Presidio |
-| Agent Tool Protocol | MCP |
-| MCP Server | FastMCP |
-| Ticket Database | SQLite |
-| UI | Streamlit |
-| Environment | uv |
+```text
+Python 3.10
+uv
+```
+
+The project is configured for:
+
+```text
+>=3.10,<3.11
+```
 
 ## Installation
 
 ### Clone the repository
 
-```bash
-git clone https://github.com/shivamshete1036/enterprise-knowledge-assistant.git
-cd enterprise-knowledge-assistant
-```
-
-### Create the environment
-
-```bash
-uv venv
-```
-
-Activate it on Windows:
-
 ```powershell
-.venv\Scripts\Activate.ps1
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd enterprise-knowledge-assistant
 ```
 
 ### Install dependencies
 
-```bash
-uv pip install -r requirements.txt
+```powershell
+uv sync
 ```
 
-## Ollama Setup
+The committed `pyproject.toml` and `uv.lock` recreate the tested dependency environment.
 
-The project uses Ollama through its OpenAI-compatible API.
+## Environment Configuration
 
-Make sure Ollama is installed and running.
+Create a `.env` file in the project root.
 
-The application currently uses:
+Example:
 
-```text
-gpt-oss:120b-cloud
+```env
+GOOGLE_API_KEY=your_google_api_key
+
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=your_langsmith_api_key
+LANGSMITH_PROJECT=enterprise-knowledge-assistant
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+
 ```
-
-Verify the model is available through your Ollama setup before running the application.
 
 ## Knowledge Base Indexing
 
-The enterprise knowledge base is stored under:
+Place enterprise `.txt` documents inside:
 
 ```text
 knowledge_base/
 ```
 
-To index the knowledge base:
+Run:
 
-```bash
+```powershell
 uv run python -m rag.index_knowledge_base
 ```
 
-Generated ChromaDB data is stored under:
+The indexing process is:
 
 ```text
-data/chroma/
+Documents → Loading → Chunking → Embedding → ChromaDB
 ```
-
-This generated data is ignored by Git.
 
 ## Running the Application
 
-The Streamlit interface is provided by `app.py`.
-
-Run:
-
-```bash
+```powershell
 uv run streamlit run app.py
+```
+
+Open:
+
+```text
+http://localhost:8501
 ```
 
 ## Testing
 
-The project contains component-level and integration tests.
+### Full MCP + LangGraph Integration
 
-### RAGAS
-
-```bash
-uv run python -m tests.test_ragas_evaluator
+```powershell
+uv run python -m tests.test_mcp_full_graph
 ```
 
-### Full RAG flow
+This verifies RAG retrieval, MCP ticket creation, ticket retrieval, ticket search, and LangGraph routing.
 
-```bash
-uv run python -m tests.test_end_to_end
+### PII Sanitization
+
+```powershell
+uv run python -m tests.test_pii_sanitization
 ```
 
-### MCP integration
+### Full Graph PII Protection
 
-```bash
-uv run python -m tests.test_mcp_graph
-```
-
-### Full graph
-
-```bash
+```powershell
 uv run python -m tests.test_full_graph
 ```
 
-The tests cover major components including:
+### LangSmith Connection
 
-- Document loading
-- Chunking
-- Embeddings
-- Vector store
-- Retrieval
-- Response generation
-- Input guardrails
-- Output guardrails
-- RAGAS evaluation
-- LangGraph workflow
-- MCP integration
-- End-to-end execution
+```powershell
+uv run python -m tests.test_langsmith_connection
+```
+
+Expected:
+
+```text
+LangSmith connection successful
+```
+
+### LangSmith Trace
+
+```powershell
+uv run python -m tests.test_langsmith_trace
+```
 
 ## Example Queries
 
-### Knowledge Query
+### Knowledge
 
 ```text
-What does the company say about working from home?
+How many annual leave days does a full-time employee receive?
 ```
-
-Expected route:
 
 ```text
-Input Guard
-    ↓
-Router
-    ↓
-Retriever
-    ↓
-Response
-    ↓
-Output Guard
-    ↓
-RAGAS
+What is the company VPN policy?
 ```
-
-### MCP Action
 
 ```text
-Create a high priority support ticket because employees
-cannot connect to the corporate VPN.
+What are the standard working hours?
 ```
-
-Expected route:
 
 ```text
-Input Guard
-    ↓
-Router
-    ↓
-MCP Agent
-    ↓
-MCP Client
-    ↓
-FastMCP Server
-    ↓
-SQLite
+Can employees work remotely?
 ```
 
-### PII Protection
+### MCP
+
+Create a ticket:
 
 ```text
-My email is example@example.com.
-What is the company work-from-home policy?
+Create a high priority support ticket because employees cannot connect to the corporate VPN.
 ```
 
-Expected behavior:
+Get a ticket:
 
 ```text
-Input Guard
-    ↓
-Request blocked
+Give me the details of TKT-0016.
 ```
 
-The private information should not reach the LLM.
-
-## Design Principles
-
-### Grounded Generation
-
-The RAG response agent is instructed to answer only from retrieved enterprise context.
-
-### Separation of Concerns
-
-Different responsibilities are handled by separate LangGraph nodes:
+Search tickets:
 
 ```text
-Guardrails
-Retrieval
-Response Generation
-Evaluation
-External Actions
+Find all support tickets related to VPN.
 ```
 
-### Conditional Routing
+## Dependency Management
 
-The router prevents unnecessary execution of unrelated components.
+The project uses `uv` for reproducible dependency management.
 
-### External System Interaction
+- `pyproject.toml` defines project dependencies.
+- `uv.lock` contains the exact resolved dependency versions.
 
-MCP provides a standardized interface between the AI agent and the enterprise ticket system.
+For a new machine:
 
-### Evaluation
+```powershell
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd enterprise-knowledge-assistant
+uv sync
+uv run streamlit run app.py
+```
 
-RAG responses are evaluated instead of assuming that every generated answer is correct.
+## Security
 
-## Current Limitations
+The project includes:
 
-- The MCP agent currently focuses on ticket creation.
-- `get_ticket` and `search_tickets` are available on the MCP server but are not yet routed through natural-language requests.
-- The knowledge base is currently small and can be expanded with additional enterprise documents.
-- The Streamlit UI is being developed as the next integration layer.
-- RAGAS evaluation is primarily applicable to knowledge/RAG requests rather than external action requests.
+- PII detection and sanitization
+- Guardrails before LLM processing
+- Environment-based secret management
+- Grounded responses using retrieved enterprise documents
+- MCP-based separation for external ticket operations
 
-## Future Enhancements
+## Current MCP Tools
 
-Potential improvements include:
-
-- Natural-language ticket lookup.
-- Ticket search through MCP.
-- Ticket status updates.
-- More enterprise knowledge sources.
-- Hybrid search combining semantic and keyword retrieval.
-- Query rewriting.
-- Reranking.
-- More comprehensive RAG evaluation.
-- LangSmith observability.
-- Authentication and authorization.
-- Conversation memory.
-- Production database integration.
-- Rich Streamlit dashboard.
-- Human approval for sensitive enterprise actions.
-
+```text
+1. create_ticket
+2. get_ticket
+3. search_tickets
+```
 ## Project Goal
 
-The goal of this project is to demonstrate an **agentic enterprise knowledge assistant** that can:
+The goal of this project is to demonstrate an enterprise AI assistant combining:
 
-1. Understand a user's request.
-2. Protect sensitive information.
-3. Decide which workflow is appropriate.
-4. Retrieve enterprise knowledge when required.
-5. Generate grounded responses.
-6. Evaluate RAG response quality.
-7. Interact with external enterprise systems through MCP.
-8. Return a useful action-oriented response to the user.
+```text
+RAG
++
+LangGraph
++
+MCP
++
+Guardrails
++
+RAGAS
++
+LangSmith
+```
 
-## License
-
-This project is developed for educational and demonstration purposes.
+to provide grounded knowledge retrieval, safe LLM interactions, external system integration, response evaluation, and end-to-end observability.
